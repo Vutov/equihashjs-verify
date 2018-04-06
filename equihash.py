@@ -89,7 +89,6 @@ def get_indices_from_minimal(minimal, bit_len):
     len_indices = 8*eh_index_size*len(minimal)//bit_len
     byte_pad = eh_index_size - (bit_len+7)//8
     expanded = expand_array(minimal, len_indices, bit_len, byte_pad)
-    print([struct.unpack('>I', expanded[i:i+4])[0] for i in range(0, len_indices, eh_index_size)])
     return [struct.unpack('>I', expanded[i:i+4])[0] for i in range(0, len_indices, eh_index_size)]
 
 

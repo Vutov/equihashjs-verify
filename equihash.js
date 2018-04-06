@@ -13,19 +13,19 @@ var word_mask = 1 * Math.pow(2, 32) - 1 // (1 << word_size) - 1 overflow
 function expand_array(inp, out_len, bit_len, byte_pad = 0) {
     // assert bit_len >= 8 and word_size >= 7+bit_len
 
-    var out_width = Math.trunc((bit_len + 7) / 8) + byte_pad
+    let out_width = Math.trunc((bit_len + 7) / 8) + byte_pad
     // assert out_len == 8*out_width*len(inp)//bit_len
-    var out = Buffer.alloc(out_len)
+    let out = Buffer.alloc(out_len)
 
-    var bit_len_mask = (1 << bit_len) - 1
+    let bit_len_mask = (1 << bit_len) - 1
 
     // # The acc_bits least-significant bits of acc_value represent a bit sequence
     // # in big-endian order.
-    var acc_bits = 0
-    var acc_value = 0
+    let acc_bits = 0
+    let acc_value = 0
 
-    var j = 0
-    for (var i = 0; i < inp.length; i++) {
+    let j = 0
+    for (let i = 0; i < inp.length; i++) {
         acc_value = ((acc_value << 8) & word_mask) | inp[i]
         acc_bits += 8
 
@@ -33,7 +33,7 @@ function expand_array(inp, out_len, bit_len, byte_pad = 0) {
         // # output element.
         if (acc_bits >= bit_len) {
             acc_bits -= bit_len
-            for (var x = byte_pad; x < out_width; x++) {
+            for (let x = byte_pad; x < out_width; x++) {
                 out[j + x] = (
                     // # Big-endian
                     acc_value >> (acc_bits + (8 * (out_width - x - 1)))
@@ -89,14 +89,14 @@ function compress_array(inp, out_len, bit_len, byte_pad = 0) {
 
 // TODO Ported
 function get_indices_from_minimal(minimal, bit_len) {
-    var eh_index_size = 4
+    let eh_index_size = 4
     // assert (bit_len+7)//8 <= eh_index_size
-    var len_indices = Math.trunc(8 * eh_index_size * minimal.length / bit_len)
-    var byte_pad = eh_index_size - Math.trunc((bit_len + 7) / 8)
-    var expanded = expand_array(minimal, len_indices, bit_len, byte_pad)
+    let len_indices = Math.trunc(8 * eh_index_size * minimal.length / bit_len)
+    let byte_pad = eh_index_size - Math.trunc((bit_len + 7) / 8)
+    let expanded = expand_array(minimal, len_indices, bit_len, byte_pad)
 
-    var data = []
-    for (var i = 0; i < len_indices; i += eh_index_size) {
+    let data = []
+    for (let i = 0; i < len_indices; i += eh_index_size) {
         data.push(expanded.readUInt32BE(i, i + 4))
     }
 
@@ -113,15 +113,21 @@ function get_minimal_from_indices(indices, bit_len) {
     return compress_array(byte_indices, min_len, bit_len, byte_pad)
 }
 
+// TODO Ported
 function hash_nonce(digest, nonce) {
-    for (var i = 0; i < 8; i++) {
-        var data = nonce >> (32 * i) & 0xffffffff;
-        digest.update(Buffer.from(data.toString(), 'ucs2'))
+    for (let i = 7; i >= 0; i--) {        
+        let buf = Buffer.alloc(4)
+        let num = nonce.readUInt32BE(4*i, 4*(i+1))
+        buf.writeUIntLE(num, 0, 4)
+        digest.update(buf)
     }
 }
 
+// TODO Ported
 function hash_xi(digest, xi) {
-    digest.update(struct.pack('<I', xi))
+    let buf = Buffer.alloc(32)
+    buf.writeUInt32LE(xi)
+    digest.update(buf)
     return digest //# For chaining
 }
 
@@ -304,6 +310,7 @@ function gbp_basic(digest, n, k) {
 }
 
 function gbp_validate(digest, minimal, n, k) {
+    console.log(digest.digest('hex'))
     validate_params(n, k)
     var collision_length = n / (k + 1)
     var hash_length = (k + 1) * (Math.trunc((collision_length + 7) / 8))
@@ -315,13 +322,16 @@ function gbp_validate(digest, minimal, n, k) {
         return false
     }
 
-    var X = []
-    for (var i in get_indices_from_minimal(minimal, collision_length + 1)) {
-        var r = i % indices_per_hash_output
+    let X = []
+    let indices = get_indices_from_minimal(minimal, collision_length + 1)
+    for (let m = 0; m < indices.length; i++) {
+        let i = indices[m]
+        let r = i % indices_per_hash_output
         // # X_i = H(I||V||x_i)
-        var curr_digest = digest.copy()
-        hash_xi(curr_digest, i / indices_per_hash_output)
-        var tmp_hash = curr_digest.digest()
+        let curr_digest = digest; // curr_digest = digest.copy()
+        hash_xi(curr_digest, Math.trunc(i / indices_per_hash_output))
+        let tmp_hash = curr_digest.digest('hex')
+        console.log(tmp_hash)
         X.append(
             // expand_array(bytearray(tmp_hash[r*n//8:(r+1)*n//8]),hash_length, collision_length),
             // (i,)
@@ -362,15 +372,14 @@ function gbp_validate(digest, minimal, n, k) {
     return true
 }
 
-// TODO Better way?
+// TODO Ported
 function zcash_person(n, k) {
-    var arr = [
-        Buffer.from('ZcashPoW', 'utf8'),
-        Buffer.from(n.toString(), 'ucs2'),
-        Buffer.from(k.toString(), 'ucs2')
-    ]
-
-    return Buffer.concat(arr);
+    let buf = Buffer.alloc(16)
+    buf.write('ZcashPoW', 0, 8, 'utf8')
+    buf.writeUIntLE(n, 8, 4)
+    buf.writeUIntLE(k, 12, 4)
+   
+    return buf;
 }
 
 function print_hash(h) {
@@ -381,6 +390,7 @@ function print_hash(h) {
     }
 }
 
+// TODO Ported
 function validate_params(n, k) {
     if (k >= n) {
         throw new Error('n must be larger than k')
