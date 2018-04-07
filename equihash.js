@@ -66,7 +66,7 @@ function compress_array(inp, out_len, bit_len, byte_pad = 0) {
     var acc_value = 0
 
     var j = 0
-    for (var i = 0; i < out_len.lenght; i++) {
+    for (var i = 0; i < out_len.length; i++) {
         // # When we have fewer than 8 bits left in the accumulator, read the next
         // # input element.
         if (acc_bits < 8) {
@@ -332,7 +332,7 @@ function gbp_validate(createDigest, minimal, n, k) {
     var solution_width = Math.trunc((1 << k) * (collision_length + 1) / 8)
 
     if (minimal.length != solution_width) {
-        console.log('Invalid solution length: ' + minimal.lenght + ' (expected ' + solution_width + ')')
+        console.log('Invalid solution length: ' + minimal.length + ' (expected ' + solution_width + ')')
         return false
     }
 
