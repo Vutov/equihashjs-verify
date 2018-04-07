@@ -137,7 +137,7 @@ function count_zeroes(h) {
     // # Convert to binary string
     let res = ''
     for (let i = 0; i < h.length; i++) {
-        res += ('' + h[i]).padStart(8, '0')
+        res += h[i].toString(2).padStart(8, '0')
     }
 
     // # Count leading zeroes
