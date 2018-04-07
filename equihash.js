@@ -8,14 +8,22 @@ var VERBOSE = true
 var word_size = 32
 var word_mask = 1 * Math.pow(2, 32) - 1 // (1 << word_size) - 1 overflow 
 
-// TODO Fix asserts
+function assert(condition, message) {
+    if (!condition) {
+        message = message || "Assertion failed";
+        if (typeof Error !== "undefined") {
+            throw new Error(message);
+        }
+        throw message; // Fallback
+    }
+}
 
 // Ported
 function expand_array(inp, out_len, bit_len, byte_pad = 0) {
-    // assert bit_len >= 8 and word_size >= 7+bit_len
+    assert(bit_len >= 8 && word_size >= 7 + bit_len)
 
     let out_width = Math.trunc((bit_len + 7) / 8) + byte_pad
-    // assert out_len == 8*out_width*len(inp)//bit_len
+    assert(out_len == Math.trunc(8 * out_width * inp.length / bit_len))
     let out = Buffer.alloc(out_len)
 
     let bit_len_mask = (1 << bit_len) - 1
@@ -91,7 +99,7 @@ function compress_array(inp, out_len, bit_len, byte_pad = 0) {
 // Ported
 function get_indices_from_minimal(minimal, bit_len) {
     let eh_index_size = 4
-    // assert (bit_len+7)//8 <= eh_index_size
+    assert(Math.trunc((bit_len + 7) / 8) <= eh_index_size)
     let len_indices = Math.trunc(8 * eh_index_size * minimal.length / bit_len)
     let byte_pad = eh_index_size - Math.trunc((bit_len + 7) / 8)
     let expanded = expand_array(minimal, len_indices, bit_len, byte_pad)
