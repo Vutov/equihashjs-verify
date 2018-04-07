@@ -1,5 +1,6 @@
 // # ZCASH implementation: https://github.com/zcash/zcash/blob/master/qa/rpc-tests/test_framework/equihash.py
 var blake2b = require('blake2b')
+var _ = require('lodash')
 
 var DEBUG = true
 var VERBOSE = true
@@ -9,7 +10,7 @@ var word_mask = 1 * Math.pow(2, 32) - 1 // (1 << word_size) - 1 overflow
 
 // TODO Fix asserts
 
-// TODO Ported
+// Ported
 function expand_array(inp, out_len, bit_len, byte_pad = 0) {
     // assert bit_len >= 8 and word_size >= 7+bit_len
 
@@ -87,7 +88,7 @@ function compress_array(inp, out_len, bit_len, byte_pad = 0) {
     return out
 }
 
-// TODO Ported
+// Ported
 function get_indices_from_minimal(minimal, bit_len) {
     let eh_index_size = 4
     // assert (bit_len+7)//8 <= eh_index_size
@@ -113,7 +114,7 @@ function get_minimal_from_indices(indices, bit_len) {
     return compress_array(byte_indices, min_len, bit_len, byte_pad)
 }
 
-// TODO Ported
+// Ported
 function hash_nonce(digest, nonce) {
     for (let i = 7; i >= 0; i--) {
         let buf = Buffer.alloc(4)
@@ -123,7 +124,7 @@ function hash_nonce(digest, nonce) {
     }
 }
 
-// TODO Ported
+// Ported
 function hash_xi(digest, xi) {
     let buf = Buffer.alloc(4)
     buf.writeUInt32LE(xi, 0, 4)
@@ -131,37 +132,50 @@ function hash_xi(digest, xi) {
     return digest //# For chaining
 }
 
+// Ported
 function count_zeroes(h) {
     // # Convert to binary string
-    var h;
-    if (type(h) == bytearray) {
-        h = ''//.join('{0:08b}'.format(x, 'b') for x in h)
+    let res = ''
+    for (let i = 0; i < h.length; i++) {
+        res += ('' + h[i]).padStart(8, '0')
     }
-    else {
-        h = ''//.join('{0:08b}'.format(ord(x), 'b') for x in h)
-    }
+
     // # Count leading zeroes
-    return (h + '1').index('1')
+    return (res + '1').indexOf('1')
 }
 
+// Ported
 function has_collision(ha, hb, i, l) {
-    res = ''//[ha[j] == hb[j] for j in range((i-1)*l//8, i*l//8)]
-    return ''//reduce(lambda x, y: x and y, res)
+    let res = []
+    for (let j = Math.trunc((i - 1) * l / 8); j < Math.trunc(i * l / 8); j++) {
+        res.push(ha[j] == hb[j])
+    }
+
+    return res.every(x => x === true);
 }
 
+// Ported
 function distinct_indices(a, b) {
-    for (var i in a) {
-        for (var j in b) {
-            if (i == j) {
+    for (let i = 0; i < a.length; i++) {
+        for (let j = 0; j < b.length; j++) {
+            if (a[i] === b[j]) {
                 return false
             }
         }
     }
+
     return true
 }
 
+// Ported
 function xor(ha, hb) {
-    return ''//bytearray(a^b for a,b in zip(ha,hb))
+    let zip = _.zip(ha, hb)
+    let res = []
+    for (let i = 0; i < zip.length; i++) {
+        res.push(zip[i][0] ^ zip[i][1])
+    }
+
+    return Buffer.from(res)
 }
 
 function gbp_basic(digest, n, k) {
@@ -309,6 +323,7 @@ function gbp_basic(digest, n, k) {
     return //[get_minimal_from_indices(soln, collision_length+1) for soln in solns]
 }
 
+// Ported
 function gbp_validate(createDigest, minimal, n, k) {
     validate_params(n, k)
     var collision_length = n / (k + 1)
@@ -329,17 +344,17 @@ function gbp_validate(createDigest, minimal, n, k) {
         // # X_i = H(I||V||x_i)
         let curr_digest = createDigest()
         hash_xi(curr_digest, Math.trunc(i / indices_per_hash_output))
-        let tmp_hash = curr_digest.digest('hex')
-        console.log(tmp_hash)
-        // X.append(
-        //     // expand_array(bytearray(tmp_hash[r*n//8:(r+1)*n//8]),hash_length, collision_length),
-        //     // (i,)
-        // )
+        let tmp_hash = curr_digest.digest()
+        let slice = tmp_hash.slice(Math.trunc(r * n / 8), Math.trunc((r + 1) * n / 8))
+        X.push([
+            expand_array(slice, hash_length, collision_length),
+            [i]
+        ])
     }
 
-    for (var r = 1; r < k + 1; r++) {
-        var Xc = []
-        for (var i = 0; i < x.lenght; x += 2) {
+    for (let r = 1; r < k + 1; r++) {
+        let Xc = []
+        for (let i = 0; i < X.length; i += 2) {
             if (!has_collision(X[i][0], X[i + 1][0], r, collision_length)) {
                 console.log('Invalid solution: invalid collision length between StepRows')
                 return false
@@ -352,13 +367,14 @@ function gbp_validate(createDigest, minimal, n, k) {
                 console.log('Invalid solution: duplicate indices')
                 return false
             }
-            Xc.append((xor(X[i][0], X[i + 1][0]), X[i][1] + X[i + 1][1]))
+
+            Xc.push([xor(X[i][0], X[i + 1][0]), _.union(X[i][1], X[i + 1][1])])
         }
 
         X = Xc
     }
 
-    if (len(X) != 1) {
+    if (X.length != 1) {
         console.log('Invalid solution: incorrect length after end of rounds: ' + X.length)
         return false
     }
@@ -371,7 +387,7 @@ function gbp_validate(createDigest, minimal, n, k) {
     return true
 }
 
-// TODO Ported
+// Ported
 function zcash_person(n, k) {
     let buf = Buffer.alloc(16)
     buf.write('ZcashPoW', 0, 8, 'utf8')
@@ -389,7 +405,7 @@ function print_hash(h) {
     }
 }
 
-// TODO Ported
+// Ported
 function validate_params(n, k) {
     if (k >= n) {
         throw new Error('n must be larger than k')
@@ -399,6 +415,7 @@ function validate_params(n, k) {
     }
 }
 
+// Ported
 function is_gbp_valid(header, nNonce, nSolution, n = 48, k = 5) {
     // # H(I||...
     let createDigest = function () {
