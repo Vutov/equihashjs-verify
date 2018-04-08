@@ -1,8 +1,8 @@
 {
   "name": "equihashjs-verify",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Equihash JavaScript verification ported from ZCASH on Python",
-  "main": "index.js",
+  "main": "src/index.js",
   "dependencies": {
     "blake2b": "^2.1.2",
     "lodash": "^4.17.5",
