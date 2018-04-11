@@ -1,6 +1,6 @@
 {
   "name": "equihashjs-verify",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Equihash JavaScript verification ported from ZCASH on Python",
   "main": "src/index.js",
   "dependencies": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Vutov/equihashjs-verify.git"
+    "url": "git+https://github.com/BTCGPU/equihashjs-verify.git"
   },
   "keywords": [
     "equihash"
@@ -22,7 +22,7 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Vutov/equihashjs-verify/issues"
+    "url": "https://github.com/BTCGPU/equihashjs-verify/issues"
   },
-  "homepage": "https://github.com/Vutov/equihashjs-verify#readme"
+  "homepage": "https://github.com/BTCGPU/equihashjs-verify#readme"
 }
