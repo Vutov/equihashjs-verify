@@ -4,6 +4,8 @@ var NETWORKS = require('../src/networks')
 var fixtures = require('./equihash.fixtures')
 
 describe('Equihash', function () {
+    'use strict'
+    
     describe('Verify', function () {
         beforeEach(function () {
             this.equihash = new Equihash(NETWORKS.bitcoingold)
@@ -24,13 +26,20 @@ describe('Equihash', function () {
 
         fixtures.invalid.forEach(fixture => {
             it('should return false when not valid ' + fixture.description, function () {
-                let valid = false
-                if (fixture.nonce) {
-                    valid = this.equihash.verify(Buffer.from(fixture.header, 'hex'), Buffer.from(fixture.solution, 'hex'), Buffer.from(fixture.nonce, 'hex'))
-                } else {
-                    valid = this.equihash.verify(Buffer.from(fixture.header, 'hex'), Buffer.from(fixture.solution, 'hex'))
-                }
+                let valid = true
 
+                // Node < 8 - buffer throw exception when wrong hex
+                try {
+                    let header = Buffer.from(fixture.header, 'hex'),
+                    solution =  Buffer.from(fixture.solution, 'hex'),
+                    nonce = fixture.nonce ? Buffer.from(fixture.nonce, 'hex') : null
+
+                    valid = this.equihash.verify(header, solution, nonce)
+                } catch(ex) {
+                    console.log(ex)
+                    valid = false;
+                }
+                
                 assert.ok(!valid);
             });
         });
