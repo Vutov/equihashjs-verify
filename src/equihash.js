@@ -10,9 +10,18 @@ function Equihash(network) {
 Equihash.prototype = function () {
     // DEBUG = true
     // VERBOSE = true
+    'use strict'
 
     let word_size = 32,
-        word_mask = 1 * Math.pow(2, 32) - 1, // (1 << word_size) - 1 overflow 
+        word_mask = 1 * Math.pow(2, 32) - 1, // (1 << word_size) - 1 overflow
+        
+        padLeft = function(str, size) {
+            while (str.length < size) {
+                str = "0" + str;
+            }
+
+            return str
+        },
 
         assert = function (condition, message) {
             if (!condition) {
@@ -25,7 +34,8 @@ Equihash.prototype = function () {
         },
 
         // Ported
-        expand_array = function (inp, out_len, bit_len, byte_pad = 0) {
+        expand_array = function (inp, out_len, bit_len, byte_pad) {
+            byte_pad = byte_pad || 0
             assert(bit_len >= 8 && word_size >= 7 + bit_len)
 
             let out_width = Math.trunc((bit_len + 7) / 8) + byte_pad
@@ -151,7 +161,7 @@ Equihash.prototype = function () {
             // # Convert to binary string
             let res = ''
             for (let i = 0; i < h.length; i++) {
-                res += h[i].toString(2).padStart(8, '0')
+                res += padLeft(h[i].toString(2), 8)
             }
 
             // # Count leading zeroes
@@ -430,7 +440,9 @@ Equihash.prototype = function () {
         },
 
         // Ported
-        is_gbp_valid = function (header, nNonce, nSolution, n = 48, k = 5) {
+        is_gbp_valid = function (header, nNonce, nSolution, n, k) {
+            n = n || 48
+            k = k || 5
             // # H(I||...
             let createDigest = function () {
                 let digest = blake2b(Math.trunc((512 / n)) * Math.trunc(n / 8), null, null, zcash_person(n, k))
@@ -443,7 +455,7 @@ Equihash.prototype = function () {
             return gbp_validate(createDigest, nSolution, n, k)
         },
 
-        verify = function (header, solution, nonce = null) {
+        verify = function (header, solution, nonce) {
             assert(Buffer.isBuffer(header), 'Header must be Buffer')
             assert(header.length >= 108, 'Header must be at least 108 long')
             assert(Buffer.isBuffer(solution), 'Solution must be Buffer')
