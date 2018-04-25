@@ -1,5 +1,7 @@
 # equihashjs-verify
 [![NPM](https://img.shields.io/npm/v/equihashjs-verify.svg)](https://www.npmjs.com/package/equihashjs-verify)
+[![Build Status](https://travis-ci.org/Vutov/equihashjs-verify.svg?branch=master)](https://travis-ci.org/Vutov/equihashjs-verify)
+
 JavaScript check for valid Equihash solutions. Ported from ZCASH on Python
 ### ZCASH implementation: https://github.com/zcash/zcash/blob/master/qa/rpc-tests/test_framework/equihash.py
 
