@@ -412,9 +412,9 @@ Equihash.prototype = function () {
         },
 
         // Ported
-        zcash_person = function (n, k) {
+        zcash_person = function (person, n, k) {
             let buf = Buffer.alloc(16)
-            buf.write('ZcashPoW', 0, 8, 'utf8')
+            buf.write(person, 0, 8, 'utf8')
             buf.writeUIntLE(n, 8, 4)
             buf.writeUIntLE(k, 12, 4)
 
@@ -440,12 +440,12 @@ Equihash.prototype = function () {
         },
 
         // Ported
-        is_gbp_valid = function (header, nNonce, nSolution, n, k) {
+        is_gbp_valid = function (header, nNonce, nSolution, n, k, person) {
             n = n || 48
             k = k || 5
             // # H(I||...
             let createDigest = function () {
-                let digest = blake2b(Math.trunc((512 / n)) * Math.trunc(n / 8), null, null, zcash_person(n, k))
+                let digest = blake2b(Math.trunc((512 / n)) * Math.trunc(n / 8), null, null, zcash_person(person, n, k))
                 digest.update(header.slice(0, 108))
                 hash_nonce(digest, nNonce)
 
@@ -468,7 +468,7 @@ Equihash.prototype = function () {
                 nonce = Buffer.from(nonceHex, 'hex')
             }
 
-            return is_gbp_valid(header, nonce, solution, this.network.n, this.network.k)
+            return is_gbp_valid(header, nonce, solution, this.network.n, this.network.k, this.network.person)
         }
 
     return {
