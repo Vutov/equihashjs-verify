@@ -6,7 +6,7 @@
   "dependencies": {
     "blake2b": "^2.1.2",
     "lodash": "^4.17.5",
-    "mocha": "^5.0.5"
+    "mocha": "^8.1.3"
   },
   "devDependencies": {},
   "scripts": {
@@ -24,5 +24,6 @@
   "bugs": {
     "url": "https://github.com/BTCGPU/equihashjs-verify/issues"
   },
-  "homepage": "https://github.com/BTCGPU/equihashjs-verify#readme"
+  "homepage": "https://github.com/BTCGPU/equihashjs-verify#readme",
+  "types": "types/index.d.ts"
 }
